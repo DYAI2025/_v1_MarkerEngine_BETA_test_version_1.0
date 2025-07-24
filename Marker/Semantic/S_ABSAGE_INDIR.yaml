@@ -1,0 +1,35 @@
+# Semantic Marker: Indirekte Absage
+id: S_ABSAGE_INDIR
+name: "Indirekte Absage"
+category: "rejection_patterns"
+type: "semantic"
+description: "Erkennt indirekte Absagen durch Kombination von Zeitmangel und Unsicherheit"
+
+semantic_grabber_id: SGR_ABSAGE_INDIR_01
+
+composed_of:
+  - A_WENIG_ZEIT
+  - A_NICHT_SICHER
+
+rules:
+  co_occurrence:
+    window_size: 3  # innerhalb von 3 Nachrichten
+    min_matches: 2
+    
+activation_logic: "(A_WENIG_ZEIT AND A_NICHT_SICHER)"
+
+scoring:
+  base_score: 0.8
+  confidence: 0.9
+  amplification_factor: 1.2
+
+interpretation:
+  meaning: "Person signalisiert indirekt Desinteresse oder Rückzug"
+  risk_level: "medium"
+  recommendation: "Direkte Klärung der Situation empfohlen"
+
+metadata:
+  created: "2025-01-01"
+  version: "1.0"
+  tags: ["absage", "rückzug", "distanzierung"]
+  psychological_basis: "Konflikt-Vermeidungsverhalten nach Satir"

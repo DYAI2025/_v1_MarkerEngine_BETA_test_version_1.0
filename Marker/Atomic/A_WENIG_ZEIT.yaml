@@ -1,0 +1,30 @@
+# Atomic Marker: Wenig Zeit
+id: A_WENIG_ZEIT
+name: "Wenig Zeit"
+category: "time_pressure"
+type: "atomic"
+description: "Erkennt Hinweise auf Zeitmangel, Stress oder Überlastung"
+
+atomic_pattern:
+  - "wenig zeit"
+  - "kaum zeit"
+  - "keine zeit"
+  - "viel zu tun"
+  - "hab grad stress"
+  - "im stress"
+  - "bin beschäftigt"
+  - "viel um die ohren"
+  - "zeitdruck"
+  - "termine"
+  - "deadline"
+  - "hetze"
+  - "eile"
+
+scoring:
+  base_score: 0.7
+  confidence: 0.85
+  
+metadata:
+  created: "2025-01-01"
+  version: "1.0"
+  tags: ["zeit", "stress", "distanz"]

@@ -1,0 +1,66 @@
+# SEMANTIC MARKER FRAMEWORK – PROJECT RULESET
+
+project_name: Semantic Behavior Marker System
+version: 1.0
+language: de
+description: >
+  Regelsystem zur Annotation, Erweiterung, Verlinkung und semantischen Analyse
+  von kommunikativen Markerstrukturen in digitalen Dialogen.
+  Ziel ist die konsistente und skalierbare Zusammenarbeit zwischen GPTs, Assistenten und Tools.
+
+rules:
+
+  marker_structure:
+    - Jeder Marker ist eine YAML-Datei mit eindeutiger ID (z.B. SELF_REFLECTION_MARKER)
+    - Felder: marker_name, beschreibung, beispiele[], semantische_grabber_id
+    - Beispiele dürfen variieren, aber die Bedeutung muss konsistent sein
+    - Jeder Marker soll einem semantischen Grabber zugeordnet sein
+
+  grabber_structure:
+    - Jeder semantische Grabber ist eine Entry im File semantic_grabber_library.yaml
+    - "Felder: ID mit beschreibung und patterns[]"
+    - Grabber-IDs enden mit _SEM (z.B. SELF_REFLECTION_SEM)
+    - Patterns sind Kernformulierungen, semantisch prägnant, nicht wortwörtlich identisch mit Markerbeispielen
+
+  referenzierung:
+    - semantische_grabber_id im Marker referenziert 1:1 eine Grabber-ID im Library-File
+    - Fehlt diese ID, wird sie automatisch generiert und eingetragen
+    - Referenzfehler (verwaiste IDs) sind zu vermeiden
+
+  automatisierung:
+    wenn_marker_ohne_grabber:
+      - "GPT soll Beispiel-Sätze vektorisieren"
+      - "Mit allen bekannten Grabbern vergleichen (cosine similarity ≥ 0.72)"
+      - "Beste Übereinstimmung als semantische_grabber_id vorschlagen"
+      - "Falls keine passt: neue Grabber-ID erzeugen (z.B. AUTO_SEM_<datum>)"
+    grabber_management:
+      - "GPT kann mehrere Grabber mergen, wenn 85% der Patterns semantisch ähnlich sind"
+      - "GPT darf Grabber in Cluster gliedern, wenn sie thematisch verwandt sind"
+
+  strukturpflege:
+    - Grabber und Marker sollen regelmäßig auf Duplikate und Redundanz geprüft werden
+    - Neue Grabber dürfen nur erzeugt werden, wenn keine bestehende ID passt
+    - IDs und Bezeichnungen müssen maschinenlesbar, eindeutig und semantisch nachvollziehbar sein
+
+  gpt_integration:
+    - Alle GPTs sollen diese YAML-Regeln beim Erstellen, Bewerten oder Verlinken von Markern beachten
+    - GPTs dürfen Marker nur erzeugen, wenn sie eine semantische_grabber_id referenzieren
+    - GPTs dürfen neue Grabber erzeugen, müssen diese aber sofort korrekt benennen
+
+  naming_conventions:
+    - "Marker-ID: ALL_CAPS + _MARKER (z.B. AMBIVALENCE_TOLERANCE_MARKER)"
+    - "Grabber-ID: ALL_CAPS + _SEM (z.B. RESOURCE_EXCHANGE_SEM)"
+    - "Auto-IDs: AUTO_SEM_<datum>_<nummer>"
+
+  kompatibilität:
+    - Dieses Regelwerk ist vollständig kompatibel mit SentenceTransformer-basierten Matching-Modulen
+    - Es erlaubt Export nach HuggingFace-Datasets (instruction-output) und YAML-Vektordateien
+
+  dateiorganisation:
+    - "Marker liegen in: /markers/<name>.yaml"
+    - "Grabber liegen in: semantic_grabber_library.yaml"
+    - "Regeln liegen in: semantic_marker_rules.yaml (diese Datei)"
+
+  ausblick:
+    - Später Erweiterung für multimodale Inputs (Transkript, Emotion, Audio) vorgesehen
+    - Graph-Strukturen für Grabber-Beziehungen (Core-Clusters, Meta-Marker) in Planung 
