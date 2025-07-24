@@ -1,5 +1,5 @@
 """
-MarkerEngine Real Analyzer - Mit echten Markern
+MarkerEngine Real Analyzer - Mit Pattern Engine
 Verwendet die tatsächlichen Marker aus dem markers/ Verzeichnis
 """
 import os
@@ -11,6 +11,14 @@ from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+
+# Import Pattern Engine
+try:
+    from .pattern_engine import MarkerPatternEngine, PatternMatch
+    PATTERN_ENGINE_AVAILABLE = True
+except ImportError:
+    PATTERN_ENGINE_AVAILABLE = False
+    print("⚠️ Pattern Engine nicht verfügbar")
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +34,7 @@ class MarkerResult:
     context: str
 
 class RealMarkerAnalyzer:
-    """Echter Analyzer mit den richtigen Markern"""
+    """Echter Analyzer mit Pattern Engine"""
     
     def __init__(self, markers_path: str = None):
         """
@@ -36,25 +44,23 @@ class RealMarkerAnalyzer:
             markers_path: Pfad zum markers/ Verzeichnis
         """
         if markers_path is None:
-            # Finde den markers Ordner relativ zur aktuellen Datei
             base_path = Path(__file__).parent.parent.parent
             markers_path = base_path / "markers"
         
         self.markers_path = Path(markers_path)
-        self.markers = {
-            'atomic': {},
-            'semantic': {},
-            'cluster': {},
-            'meta': {}
-        }
         
-        # Lade alle Marker
-        self._load_all_markers()
-        
+        # Initialisiere Pattern Engine
+        if PATTERN_ENGINE_AVAILABLE:
+            self.pattern_engine = MarkerPatternEngine(markers_path)
+            print("✅ Pattern Engine aktiviert!")
+        else:
+            print("⚠️ Fallback auf einfache Suche")
+            self.markers = {'atomic': {}, 'semantic': {}, 'cluster': {}, 'meta': {}}
+            self._load_all_markers()
+    
     def _load_all_markers(self):
-        """Lädt alle Marker aus den YAML-Dateien"""
-        
-        # Lade Atomic Marker
+        """Lädt alle Marker aus den YAML-Dateien (Fallback)"""
+        # Nur für Fallback wenn Pattern Engine nicht verfügbar
         atomic_path = self.markers_path / "atomic"
         if atomic_path.exists():
             for yaml_file in atomic_path.glob("*.yaml"):
@@ -62,56 +68,10 @@ class RealMarkerAnalyzer:
                     with open(yaml_file, 'r', encoding='utf-8') as f:
                         data = yaml.safe_load(f)
                         if data and 'marker_name' in data:
-                            marker_id = f"A_{data['marker_name'].upper()}"
+                            marker_id = data['marker_name']
                             self.markers['atomic'][marker_id] = data
-                            logger.info(f"Loaded atomic marker: {marker_id}")
                 except Exception as e:
                     logger.error(f"Error loading {yaml_file}: {e}")
-        
-        # Lade Semantic Marker
-        semantic_path = self.markers_path / "semantic"
-        if semantic_path.exists():
-            for yaml_file in semantic_path.glob("*.yaml"):
-                try:
-                    with open(yaml_file, 'r', encoding='utf-8') as f:
-                        data = yaml.safe_load(f)
-                        if data and 'marker_name' in data:
-                            marker_id = f"S_{data['marker_name'].upper()}"
-                            self.markers['semantic'][marker_id] = data
-                            logger.info(f"Loaded semantic marker: {marker_id}")
-                except Exception as e:
-                    logger.error(f"Error loading {yaml_file}: {e}")
-        
-        # Lade Cluster Marker (falls vorhanden)
-        cluster_path = self.markers_path / "cluster"
-        if cluster_path.exists():
-            for yaml_file in cluster_path.glob("*.yaml"):
-                try:
-                    with open(yaml_file, 'r', encoding='utf-8') as f:
-                        data = yaml.safe_load(f)
-                        if data and 'marker_name' in data:
-                            marker_id = f"C_{data['marker_name'].upper()}"
-                            self.markers['cluster'][marker_id] = data
-                except Exception as e:
-                    logger.error(f"Error loading {yaml_file}: {e}")
-        
-        # Lade Meta Marker
-        meta_path = self.markers_path / "meta_marker"
-        if meta_path.exists():
-            for yaml_file in meta_path.glob("*.yaml"):
-                try:
-                    with open(yaml_file, 'r', encoding='utf-8') as f:
-                        data = yaml.safe_load(f)
-                        if data and 'marker_name' in data:
-                            marker_id = f"MM_{data['marker_name'].upper()}"
-                            self.markers['meta'][marker_id] = data
-                except Exception as e:
-                    logger.error(f"Error loading {yaml_file}: {e}")
-        
-        print(f"✅ Geladen: {len(self.markers['atomic'])} Atomic, "
-              f"{len(self.markers['semantic'])} Semantic, "
-              f"{len(self.markers['cluster'])} Cluster, "
-              f"{len(self.markers['meta'])} Meta Marker")
     
     def analyze_text(self, text: str) -> Dict[str, Any]:
         """
@@ -134,54 +94,64 @@ class RealMarkerAnalyzer:
             'risk_score': 0.0
         }
         
-        # 1. Atomic Marker Detection
-        for marker_id, marker_data in self.markers['atomic'].items():
-            hits = self._detect_atomic_marker(text, marker_data)
-            if hits:
-                results['atomic_hits'].extend(hits)
+        # Verwende Pattern Engine wenn verfügbar
+        if PATTERN_ENGINE_AVAILABLE and hasattr(self, 'pattern_engine'):
+            # Pattern-basierte Erkennung
+            pattern_matches = self.pattern_engine.detect_patterns(text, 'atomic')
+            
+            # Konvertiere zu MarkerResults
+            for match in pattern_matches:
+                marker_result = MarkerResult(
+                    marker_id=match.marker_id,
+                    marker_name=match.marker_name,
+                    level='atomic',
+                    matches=[match.match_text],
+                    confidence=match.confidence,
+                    position=match.start_pos,
+                    context=match.context
+                )
+                results['atomic_hits'].append(marker_result)
+        else:
+            # Fallback: Einfache Suche
+            for marker_id, marker_data in self.markers['atomic'].items():
+                hits = self._detect_atomic_marker_simple(text, marker_data)
+                if hits:
+                    results['atomic_hits'].extend(hits)
         
-        # 2. Semantic Marker Detection (basierend auf Atomic Hits)
-        # TODO: Implementiere composed_of Logik
+        # TODO: Semantic, Cluster und Meta Marker basierend auf Atomic Hits
         
-        # 3. Statistiken berechnen
+        # Statistiken berechnen
         results['statistics'] = {
             'total_atomic_hits': len(results['atomic_hits']),
             'unique_atomic_markers': len(set(h.marker_id for h in results['atomic_hits'])),
             'high_risk_markers': self._count_high_risk_markers(results['atomic_hits'])
         }
         
-        # 4. Risk Score berechnen
+        # Risk Score berechnen
         results['risk_score'] = self._calculate_risk_score(results)
         
         return results
     
-    def _detect_atomic_marker(self, text: str, marker_data: Dict) -> List[MarkerResult]:
-        """Erkennt Atomic Marker im Text"""
+    def _detect_atomic_marker_simple(self, text: str, marker_data: Dict) -> List[MarkerResult]:
+        """Einfache Marker-Erkennung (Fallback)"""
         hits = []
         
-        # Hole die Beispiele aus dem Marker
-        examples = marker_data.get('beispiele', [])
-        if not examples:
-            examples = marker_data.get('examples', [])
+        beispiele = marker_data.get('beispiele', []) or marker_data.get('examples', [])
         
-        # Suche nach jedem Beispiel im Text
-        for example in examples:
-            if isinstance(example, str):
-                # Bereinige das Beispiel
-                pattern = example.strip().strip('"').strip('-').strip()
+        for beispiel in beispiele:
+            if isinstance(beispiel, str):
+                clean = beispiel.strip().strip('"').strip('-').strip()
                 
-                # Suche im Text (case-insensitive)
-                if pattern.lower() in text.lower():
-                    # Finde die genaue Position
-                    match_pos = text.lower().find(pattern.lower())
+                if clean.lower() in text.lower():
+                    match_pos = text.lower().find(clean.lower())
                     context = text[max(0, match_pos-50):min(len(text), match_pos+50)]
                     
                     hit = MarkerResult(
                         marker_id=marker_data.get('marker_name', 'UNKNOWN'),
                         marker_name=marker_data.get('beschreibung', '')[:50],
                         level='atomic',
-                        matches=[pattern],
-                        confidence=0.9,
+                        matches=[clean],
+                        confidence=0.8,
                         position=match_pos,
                         context=context
                     )
@@ -193,7 +163,8 @@ class RealMarkerAnalyzer:
         """Zählt High-Risk Marker"""
         high_risk_keywords = [
             'SCAM', 'FRAUD', 'MANIPULATION', 'GASLIGHTING', 
-            'CRISIS', 'MONEY', 'BLAME', 'GUILT'
+            'CRISIS', 'MONEY', 'BLAME', 'GUILT', 'SHIFT',
+            'PLATFORM_SWITCH', 'URGENCY', 'WEBCAM_EXCUSE'
         ]
         
         count = 0
@@ -209,11 +180,18 @@ class RealMarkerAnalyzer:
         # Basis-Score aus Anzahl der Treffer
         atomic_hits = len(results['atomic_hits'])
         if atomic_hits > 0:
-            score += min(atomic_hits * 0.1, 3.0)
+            score += min(atomic_hits * 0.15, 4.0)
         
-        # High-Risk Marker erhöhen den Score
+        # High-Risk Marker erhöhen den Score stark
         high_risk = results['statistics'].get('high_risk_markers', 0)
-        score += high_risk * 0.5
+        score += high_risk * 0.8
+        
+        # Verschiedene Marker-Typen erhöhen Score
+        unique_markers = results['statistics'].get('unique_atomic_markers', 0)
+        if unique_markers > 5:
+            score += 1.5
+        elif unique_markers > 3:
+            score += 0.8
         
         # Normalize auf 0-10
         return min(score, 10.0)
@@ -247,22 +225,33 @@ def analyze_whatsapp_chat(file_path: str) -> Dict[str, Any]:
     return results
 
 if __name__ == "__main__":
-    # Test mit einer Beispiel-Datei
-    test_text = """
-    Du legst alles auf die Goldwaage, deswegen knallt's.
-    Lass uns auf WhatsApp wechseln, diese App ist unpersönlich.
-    Ich brauche dringend Geld für eine Operation.
-    Du bildest dir das nur ein, ich habe das nie gesagt.
-    """
+    # Test mit Beispielen
+    test_texts = [
+        "Du legst alles auf die Goldwaage, deswegen knallt's.",
+        "Lass uns auf WhatsApp wechseln, diese App ist unpersönlich.",
+        "Ich brauche dringend Geld für eine Operation.",
+        "Du bildest dir das nur ein, ich habe das nie gesagt.",
+        "Wenn du nicht immer so spät wärst, hätten wir das Problem nicht.",
+        "Wegen dir haben wir Verspätung.",
+        "Das ist alles deine Schuld!",
+        "Hey, wie geht's dir heute?"  # Sollte keine Treffer haben
+    ]
     
     analyzer = RealMarkerAnalyzer()
-    results = analyzer.analyze_text(test_text)
     
-    print("\n🔍 Analyse-Ergebnisse:")
-    print(f"Atomic Hits: {len(results['atomic_hits'])}")
-    print(f"Risk Score: {results['risk_score']:.1f}/10")
+    print("\n🔍 Teste Real Analyzer mit Pattern Engine:")
+    print("=" * 50)
     
-    if results['atomic_hits']:
-        print("\n📍 Gefundene Marker:")
-        for hit in results['atomic_hits'][:5]:  # Erste 5
-            print(f"  - {hit.marker_id}: '{hit.matches[0][:50]}...'")
+    for i, text in enumerate(test_texts, 1):
+        print(f"\n{i}. Text: '{text}'")
+        results = analyzer.analyze_text(text)
+        
+        if results['atomic_hits']:
+            print(f"   ✅ {len(results['atomic_hits'])} Treffer:")
+            for hit in results['atomic_hits']:
+                print(f"      - {hit.marker_id}: '{hit.matches[0]}'")
+                print(f"        Konfidenz: {hit.confidence:.1%}")
+        else:
+            print("   ❌ Keine Marker gefunden")
+        
+        print(f"   📊 Risk Score: {results['risk_score']:.1f}/10")
