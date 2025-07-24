@@ -1,0 +1,59 @@
+# Semantic Grabber Rules - Regelset für FRAUSAR Bot
+# Diese Datei definiert die Logik für automatische Grabber-Verwaltung
+
+SEMANTIC_MARKER_RULES:
+
+  GRABBER_ID_GEN:
+    wenn_semantische_grabber_id_fehlt:
+      aktion:
+        - "Berechne Embedding der Beispielsätze"
+        - "Vergleiche mit existierenden Grabbern (cosine similarity ≥ 0.72)"
+        - "Wenn Treffer vorhanden → weise bestehenden Grabber zu"
+        - "Wenn kein Treffer → generiere neue Grabber-ID (z. B. AUTO_SEM_{uuid})"
+        - "Füge neuen Grabber in semantic_grabber_library.yaml ein"
+
+  GRABBER_ID_CHECK:
+    auf_duplikate_pruefen:
+      aktion:
+        - "Lade alle Grabber-IDs"
+        - "Vergleiche semantische Ähnlichkeit zwischen allen Grabbern"
+        - "Wenn Ähnlichkeit > 0.85 bei mindestens 70% der Sätze → als Duplikatkandidat markieren"
+        - "Frage nach: 'Sollen folgende Grabber vereinigt werden?'"
+        - "Vorschlag: Neues Label + alle Sätze vereinigt"
+
+  MARKER_MIT_GRABBER_VERBINDEN:
+    beim_marker_schreiben:
+      aktion:
+        - "Analysiere Beispiele"
+        - "Vergleiche mit vorhandenen Grabbern"
+        - "Empfehle semantisch passende Grabber-ID"
+        - "Füge als Referenz ein: semantische_grabber_id: <ID>"
+
+  GRABBER_MAINTENANCE:
+    regelmäßig:
+      aktion:
+        - "Scanne alle Grabber-Definitionen"
+        - "Ermittle Redundanzen, Lücken, Überschneidungen"
+        - "Schlage Refactoring vor (Cluster, Split, Merge)"
+        - "Exportiere Heatmap der Nutzung pro Grabber"
+
+  SIMILARITY_THRESHOLDS:
+    sehr_ähnlich: 0.85  # Merge empfohlen
+    ähnlich: 0.72       # Verwende existierenden
+    unterschiedlich: 0.50  # Neuen erstellen
+
+  AUTO_ACTIONS:
+    bei_neuer_marker_erstellung:
+      - "Prüfe Beispiele auf Semantic Grabber"
+      - "Erstelle oder verknüpfe automatisch"
+      - "Dokumentiere Aktion im Chat"
+    
+    bei_yaml_import:
+      - "Erkenne semantische_grabber_id Feld"
+      - "Validiere ob Grabber existiert"
+      - "Erstelle fehlende Grabber automatisch"
+    
+    bei_python_import:
+      - "Extrahiere patterns aus Code"
+      - "Generiere Grabber aus Pattern-Definitionen"
+      - "Verknüpfe mit semantic_grabber_id Variable" 
