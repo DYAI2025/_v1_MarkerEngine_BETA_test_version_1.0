@@ -1,0 +1,39 @@
+{
+  "all_tests_passed": true,
+  "tests": [
+    {
+      "name": "Python Version",
+      "passed": true,
+      "output": "Python 3.13.3"
+    },
+    {
+      "name": "Projektstruktur",
+      "passed": true
+    },
+    {
+      "name": "Dependencies",
+      "passed": true,
+      "output": "Core dependencies installed"
+    },
+    {
+      "name": "Marker Files",
+      "passed": true,
+      "counts": {
+        "atomic": 134,
+        "semantic": 84,
+        "cluster": 65,
+        "meta_marker": 47
+      }
+    },
+    {
+      "name": "Engine Import",
+      "passed": true,
+      "output": "\u2705 Engine importiert"
+    },
+    {
+      "name": "Analyse Test",
+      "passed": true,
+      "output": "Atomic: 3, Total: 5"
+    }
+  ]
+}

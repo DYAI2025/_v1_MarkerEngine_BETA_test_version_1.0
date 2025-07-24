@@ -12,34 +12,32 @@ from markerengine.core.engine import MarkerEngine
 import json
 from datetime import datetime
 
-# Test-Chat (ein realistischer WhatsApp-Export)
+# Test-Chat (ein realistischer WhatsApp-Export mit mehr Marker-relevanten Phrasen)
 TEST_CHAT = """
 [07.11.24, 14:32:15] Sarah: Hey, wie geht's dir? Lange nichts gehört 😊
 [07.11.24, 14:33:42] Tom: Hi! Ja, war viel los. Dir gut?
-[07.11.24, 14:34:18] Sarah: Ja, alles okay. Vermisse unsere Gespräche
-[07.11.24, 14:35:02] Tom: Stimmt, war echt lange her
-[07.11.24, 14:35:45] Sarah: Hast du Lust, mal wieder was zu unternehmen?
-[07.11.24, 14:37:23] Tom: Klar, aber bin grad echt im Stress mit der Arbeit
+[07.11.24, 14:34:18] Sarah: Ja, alles okay. Vermisse unsere Gespräche. Ich liebe es, mit dir zu reden
+[07.11.24, 14:35:02] Tom: Stimmt, war echt lange her. Tut mir leid
+[07.11.24, 14:35:45] Sarah: Hast du Lust, mal wieder was zu unternehmen? Wäre schön, dich zu sehen
+[07.11.24, 14:37:23] Tom: Klar, aber bin grad echt im Stress mit der Arbeit. Wenig Zeit momentan
 [07.11.24, 14:38:01] Sarah: Oh, verstehe. Wann hättest du denn Zeit?
-[07.11.24, 14:40:15] Tom: Schwer zu sagen... vielleicht nächste Woche?
-[07.11.24, 14:41:33] Sarah: Okay... du sagst das jetzt schon zum dritten Mal 😕
-[07.11.24, 14:43:47] Tom: Sorry, ich weiß. Ist echt nicht persönlich gemeint
-[07.11.24, 14:44:29] Sarah: Schon klar. Wenn du keine Zeit hast, ist das okay
-[07.11.24, 14:46:12] Tom: Nein, ich will schon! Nur grad ist echt viel
-[07.11.24, 14:47:55] Sarah: Ich verstehe. Meld dich einfach, wenn du Zeit hast
-[07.11.24, 14:49:03] Tom: Mach ich! Versprochen
-[07.11.24, 14:50:22] Sarah: Alles klar. Pass auf dich auf
-[07.11.24, 14:51:44] Tom: Du auch! Bis bald
-[08.11.24, 09:15:33] Tom: Morgen! Wie war dein Tag gestern?
-[08.11.24, 09:45:21] Sarah: Hi. War okay. Bei dir?
-[08.11.24, 09:47:02] Tom: Ganz gut. Hör mal, wegen nächster Woche...
-[08.11.24, 09:48:15] Sarah: Lass mich raten - wird doch nichts?
-[08.11.24, 09:50:33] Tom: Nein! Ich wollte fragen ob Donnerstag passt
-[08.11.24, 09:52:47] Sarah: Oh! Ja, Donnerstag geht
-[08.11.24, 09:54:01] Tom: Super! Kino oder essen gehen?
-[08.11.24, 09:55:28] Sarah: Essen wäre schön. Können wir dann mal richtig reden
-[08.11.24, 09:57:42] Tom: Klar, gerne. Italiener?
-[08.11.24, 09:59:13] Sarah: Perfekt! Freu mich 😊
+[07.11.24, 14:40:15] Tom: Schwer zu sagen... vielleicht nächste Woche? Bin mir nicht sicher
+[07.11.24, 14:41:33] Sarah: Okay... du sagst das jetzt schon zum dritten Mal 😕 Fühle mich etwas enttäuscht
+[07.11.24, 14:43:47] Tom: Nicht meine Schuld, du hast mich nicht informiert, dass es dir so wichtig ist
+[07.11.24, 14:44:29] Sarah: Wie bitte? Du hättest dich auch mal melden können
+[07.11.24, 14:46:12] Tom: Wenn du nicht immer so drängen würdest, wäre es entspannter
+[07.11.24, 14:47:55] Sarah: Ich dränge nicht, ich vermisse dich einfach nur
+[07.11.24, 14:49:03] Tom: Du legst alles auf die Goldwaage, deswegen knallt's
+[07.11.24, 14:50:22] Sarah: Das ist jetzt unfair. Ich bin einfach traurig darüber
+[07.11.24, 14:51:44] Tom: Selber schuld, wenn du so empfindlich bist
+[08.11.24, 09:15:33] Tom: Morgen! Tut mir leid wegen gestern. War blöd von mir
+[08.11.24, 09:45:21] Sarah: Hi. Danke für die Entschuldigung. War auch nicht leicht für mich
+[08.11.24, 09:47:02] Tom: Ich wollte dich nicht verletzen. Können wir neu anfangen?
+[08.11.24, 09:48:15] Sarah: Gerne. Ich freue mich darauf
+[08.11.24, 09:50:33] Tom: Wie wäre es mit Donnerstag? Abendessen beim Italiener?
+[08.11.24, 09:52:47] Sarah: Das klingt wunderbar! Ich bin glücklich, dass wir das klären konnten
+[08.11.24, 09:54:01] Tom: Ich auch. Freue mich auf dich
+[08.11.24, 09:55:28] Sarah: Bis Donnerstag dann! ❤️
 """
 
 def test_pipeline():

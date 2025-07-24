@@ -1,0 +1,23 @@
+{
+  "test_timestamp": "2025-07-24T23:10:43.265314",
+  "statistics": {
+    "total_markers": 0,
+    "by_level": {
+      "atomic": 0,
+      "semantic": 0,
+      "cluster": 0,
+      "meta": 0
+    },
+    "unique_patterns": {
+      "atomic": 0,
+      "semantic": 0,
+      "cluster": 0,
+      "meta": 0
+    }
+  },
+  "atomic_count": 0,
+  "semantic_count": 0,
+  "cluster_count": 0,
+  "meta_count": 0,
+  "insights": []
+}

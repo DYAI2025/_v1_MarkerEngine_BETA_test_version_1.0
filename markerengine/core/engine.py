@@ -86,14 +86,31 @@ class MarkerEngine:
                 try:
                     with open(yaml_file, 'r', encoding='utf-8') as f:
                         data = yaml.safe_load(f)
-                        if data and 'marker_name' in data:
-                            marker_id = data['marker_name']
-                            self.atomic_markers[marker_id] = data
+                        if data:
+                            # Verschiedene Marker-Formate unterstützen
+                            marker_id = None
+                            examples = None
                             
-                            # Kompiliere Regex-Patterns aus den Beispielen
-                            if 'beispiele' in data:
-                                patterns = self._create_patterns_from_examples(data['beispiele'])
-                                self.compiled_patterns[marker_id] = patterns
+                            # Format 1: marker_name auf Top-Level
+                            if 'marker_name' in data:
+                                marker_id = data['marker_name']
+                                examples = data.get('beispiele', [])
+                            
+                            # Format 2: marker.name
+                            elif 'marker' in data and isinstance(data['marker'], dict):
+                                marker_id = data['marker'].get('name') or data['marker'].get('id')
+                                examples = data['marker'].get('examples', [])
+                                # Füge marker_name für konsistenten Zugriff hinzu
+                                data['marker_name'] = marker_id
+                            
+                            if marker_id:
+                                self.atomic_markers[marker_id] = data
+                                
+                                # Kompiliere Regex-Patterns aus den Beispielen
+                                if examples:
+                                    patterns = self._create_patterns_from_examples(examples)
+                                    if patterns:
+                                        self.compiled_patterns[marker_id] = patterns
                                 
                 except Exception as e:
                     logger.error(f"Fehler beim Laden von {yaml_file}: {e}")
@@ -150,21 +167,42 @@ class MarkerEngine:
         patterns = []
         
         for example in examples:
-            # Bereinige das Beispiel
-            clean_example = example.strip().strip('"').strip('-').strip()
+            # Bereinige das Beispiel gründlich
+            clean_example = example.strip()
+            # Entferne führende Bindestriche und Anführungszeichen
+            clean_example = clean_example.lstrip('-').strip()
+            clean_example = clean_example.strip('"').strip("'").strip()
+            # Nochmal strippen für Sicherheit
+            clean_example = clean_example.strip()
             
-            # Escape special regex characters
-            escaped = re.escape(clean_example)
-            
-            # Erlaube Variationen (Groß-/Kleinschreibung, Wortgrenzen)
-            pattern = rf'\b{escaped}\b'
-            
-            try:
-                compiled = re.compile(pattern, re.IGNORECASE)
-                patterns.append(compiled)
-            except Exception as e:
-                logger.warning(f"Konnte Pattern nicht kompilieren: {pattern} - {e}")
+            if not clean_example:
+                continue
                 
+            # Erstelle verschiedene Pattern-Varianten
+            patterns_to_try = []
+            
+            # 1. Exakte Phrase
+            escaped = re.escape(clean_example)
+            patterns_to_try.append(escaped)
+            
+            # 2. Wichtige Schlüsselwörter extrahieren (länger als 3 Zeichen)
+            words = clean_example.split()
+            keywords = [w for w in words if len(w) > 3 and not w.lower() in ['und', 'oder', 'aber', 'doch', 'wenn', 'dass', 'weil']]
+            
+            # 3. Erstelle flexibleres Pattern mit Schlüsselwörtern
+            if len(keywords) >= 2:
+                # Erlaube bis zu 3 Wörter zwischen Keywords
+                keyword_pattern = r'\b' + r'\b.{0,20}\b'.join(re.escape(kw) for kw in keywords[:3]) + r'\b'
+                patterns_to_try.append(keyword_pattern)
+            
+            # Kompiliere alle Pattern-Varianten
+            for pattern_str in patterns_to_try:
+                try:
+                    compiled = re.compile(pattern_str, re.IGNORECASE | re.DOTALL)
+                    patterns.append(compiled)
+                except Exception as e:
+                    logger.debug(f"Konnte Pattern nicht kompilieren: {pattern_str} - {e}")
+                    
         return patterns
         
     def analyze(self, text: str) -> AnalysisResult:
