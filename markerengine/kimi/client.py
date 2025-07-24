@@ -1,175 +1,150 @@
+#!/usr/bin/env python3
 """
-Kimi K2 API Client - Robuste KI-Integration
+MarkerEngine Kimi Client - Robuste KI-Integration
 """
+
 import os
 import httpx
-import asyncio
-import json
-from typing import Optional, Dict, Any, List
-from datetime import datetime
 import logging
-from functools import lru_cache
+import json
+from typing import Optional, Dict, Any
+from datetime import datetime
+import asyncio
+from tenacity import retry, stop_after_attempt, wait_exponential
 
-# Simple logger
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class KimiK2Client:
-    """
-    Robuster Client für Kimi K2 API
-    Features:
-    - Async/await Support
-    - Automatische Retries
-    - Caching
-    - Strukturierte Fehlerbehandlung
-    """
+    """Client für die Kimi K2 API mit Caching und Retry-Logik"""
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("KIMI_API_KEY")
         self.base_url = "https://api.moonshot.ai/v1"
-        self.model = "moonshot-v1-8k"
-        self.timeout = httpx.Timeout(30.0, connect=10.0)
-        self.max_retries = 3
-        
-        # Stats
-        self.stats = {
-            "requests": 0,
-            "successes": 0,
-            "failures": 0
-        }
+        self.timeout = httpx.Timeout(10.0, connect=5.0)
+        self._cache = {}
         
     @property
     def is_available(self) -> bool:
         """Prüft ob die API verfügbar ist"""
         return bool(self.api_key)
-        
-    async def analyze_text(
-        self,
-        text: str,
-        context: Optional[str] = None,
-        temperature: float = 0.3,
-        max_tokens: int = 1000
+    
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10)
+    )
+    async def enrich_with_kimi(
+        self, 
+        text: str, 
+        context: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Analysiere Text mit Kimi K2
+        Reichert Text mit KI-Insights an
         """
         if not self.is_available:
-            return {"error": "Kimi API key not configured", "ai_available": False}
+            return {}
             
-        self.stats["requests"] += 1
+        # Cache-Check
+        cache_key = f"{text[:50]}_{context[:20] if context else ''}"
+        if cache_key in self._cache:
+            logger.debug("Returning cached result")
+            return self._cache[cache_key]
         
-        # Build prompt
-        messages = [
-            {
-                "role": "system",
-                "content": "Du bist ein Experte für Kommunikationsanalyse und Betrugserkennung. Analysiere den folgenden WhatsApp-Chat und identifiziere wichtige Muster."
-            },
-            {
-                "role": "user", 
-                "content": self._build_prompt(text, context)
-            }
-        ]
+        # Prepare prompt
+        prompt = self._build_prompt(text, context)
         
-        # Make request with retries
-        for attempt in range(self.max_retries):
-            try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.post(
-                        f"{self.base_url}/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {self.api_key}",
-                            "Content-Type": "application/json"
-                        },
-                        json={
-                            "model": self.model,
-                            "messages": messages,
-                            "temperature": temperature,
-                            "max_tokens": max_tokens
-                        }
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        content = data["choices"][0]["message"]["content"]
-                        
-                        # Try to parse JSON response
-                        try:
-                            result = json.loads(content)
-                            self.stats["successes"] += 1
-                            return {
-                                "ai_available": True,
-                                "ai_analysis": result,
-                                "model": self.model
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": "moonshot-v1-8k",
+                        "messages": [
+                            {
+                                "role": "system",
+                                "content": "Du bist ein Experte für Kommunikationsanalyse und Beziehungsdynamiken."
+                            },
+                            {
+                                "role": "user",
+                                "content": prompt
                             }
-                        except json.JSONDecodeError:
-                            # Return as text if not JSON
-                            self.stats["successes"] += 1
-                            return {
-                                "ai_available": True,
-                                "ai_analysis": {
-                                    "summary": content,
-                                    "raw_text": True
-                                },
-                                "model": self.model
-                            }
+                        ],
+                        "temperature": 0.3,
+                        "max_tokens": 1000
+                    }
+                )
+                response.raise_for_status()
+                
+                # Parse response
+                data = response.json()
+                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                
+                try:
+                    # Versuche JSON zu parsen
+                    result = json.loads(content)
+                except json.JSONDecodeError:
+                    # Fallback: Strukturiere die Antwort selbst
+                    result = {
+                        "raw_analysis": content,
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "parsed_as_text"
+                    }
                     
-                    elif response.status_code == 429:
-                        # Rate limit
-                        if attempt < self.max_retries - 1:
-                            await asyncio.sleep(2 ** attempt)
-                            continue
-                    
-                    else:
-                        logger.error(f"API error: {response.status_code}")
-                        
-            except Exception as e:
-                logger.error(f"Request failed: {e}")
-                if attempt < self.max_retries - 1:
-                    await asyncio.sleep(1)
-                    continue
-                    
-        self.stats["failures"] += 1
-        return {
-            "error": "Failed to get AI analysis",
-            "ai_available": False
-        }
-        
+                self._cache[cache_key] = result
+                return result
+                
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                logger.warning("Rate limit reached")
+                raise
+            logger.error(f"HTTP error: {e}")
+            return {}
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            return {}
+    
     def _build_prompt(self, text: str, context: Optional[str]) -> str:
-        """Erstelle strukturierten Analyse-Prompt"""
+        """Erstellt einen strukturierten Prompt für die Analyse"""
         prompt_parts = [
-            f"Analysiere diesen WhatsApp-Chat-Auszug (max 2000 Zeichen):",
-            f"```\n{text[:2000]}\n```"
+            "Analysiere den folgenden WhatsApp-Chat-Auszug auf Kommunikationsmuster und Beziehungsdynamiken:",
+            f"Text: {text[:2000]}",  # Begrenzen für Token-Limits
         ]
         
         if context:
-            prompt_parts.append(f"\nKontext: {context}")
+            prompt_parts.append(f"Kontext: {context}")
             
         prompt_parts.extend([
-            "\nErstelle eine strukturierte Analyse als JSON mit:",
-            "{\n",
-            '  "sentiment": {"overall": "positive|neutral|negative", "score": 0.0-1.0},\n',
-            '  "key_topics": ["topic1", "topic2", ...],\n',
-            '  "risk_indicators": [{"type": "...", "severity": "low|medium|high", "description": "..."}],\n',
-            '  "communication_patterns": ["pattern1", "pattern2"],\n',
-            '  "summary": "2-3 Sätze Zusammenfassung"\n',
-            "}"
+            "",
+            "Gib eine strukturierte Analyse zurück mit:",
+            "1. Emotionale Stimmung (positiv/neutral/negativ mit Prozentangaben)",
+            "2. Hauptthemen (Liste der 3-5 wichtigsten Themen)",
+            "3. Kommunikationsdynamik (dominant/ausgeglichen/zurückhaltend)",
+            "4. Auffällige Muster (z.B. Manipulation, Gaslighting, Love-Bombing)",
+            "5. Risikoeinschätzung (niedrig/mittel/hoch mit Begründung)",
+            "",
+            "Antwort als JSON-Objekt ohne Markdown-Formatierung."
         ])
         
         return "\n".join(prompt_parts)
 
-# Synchronous wrapper for GUI integration
-def analyze_with_kimi_sync(text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
-    """Synchrone Wrapper-Funktion für GUI"""
-    client = KimiK2Client(api_key=api_key)
+
+# Synchrone Wrapper-Funktion für einfache Nutzung
+def analyze_with_kimi(text: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+    """Synchroner Wrapper für die KI-Analyse"""
+    client = KimiK2Client(api_key)
     
     if not client.is_available:
-        return {"ai_available": False, "reason": "No API key"}
-    
-    # Run async function in sync context
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+        return {"error": "No API key provided"}
+        
+    # Event Loop erstellen falls nicht vorhanden
     try:
-        result = loop.run_until_complete(client.analyze_text(text))
-        return result
-    finally:
-        loop.close()
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    return loop.run_until_complete(client.enrich_with_kimi(text))

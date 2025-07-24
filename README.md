@@ -1,147 +1,129 @@
-# 🔍 MarkerEngine v1.0
+# 🔍 MarkerEngine v1.0 - WhatsApp Chat Analyse mit KI
 
-**Intelligente WhatsApp-Chat Analyse mit KI-Integration**
-
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Kimi K2](https://img.shields.io/badge/AI-Kimi%20K2-purple.svg)](https://platform.moonshot.ai/)
-
-MarkerEngine ist eine Desktop-Anwendung zur Muster- und Betrugsanalyse in WhatsApp-Chats mit optionaler KI-Unterstützung durch Kimi K2.
+**Professionelle Kommunikationsanalyse mit vierstufiger Marker-Pipeline**
 
 ## ✨ Features
 
-- 📱 **WhatsApp-Chat Analyse**: Drag & Drop von Chat-Exporten (.txt)
-- 🎯 **Regel-basierte Analyse**: Vordefinierte Marker für Kommunikationsmuster
-- 🤖 **KI-Integration (Kimi K2)**: Erweiterte Insights durch KI-Analyse
-- 🔍 **Dual-Analyse**: Trennung zwischen Regel- und KI-Ergebnissen
-- 📊 **Detaillierte Statistiken**: Wort-/Zeichenzahl, Marker-Verteilung
-- 🌓 **Dark Mode UI**: Modernes, augenschonendes Interface
-- 🔒 **Datenschutz**: Lokale Analyse, nur KI-Anfragen gehen an API
+- **Vierstufige Analyse-Pipeline:**
+  - 🔤 **Atomic Markers**: Erkennung einzelner Schlüsselwörter und Phrasen
+  - 🧩 **Semantic Patterns**: Kombinationen von Atomics zu Bedeutungsmustern
+  - 🌐 **Cluster Dynamics**: Erkennung von Kommunikationsdynamiken
+  - ⚡ **Meta Patterns**: Hochrangige Risiko- und Verhaltensmuster
 
-## 🚀 Quick Start
+- **Echte Marker aus 3 Wochen Entwicklung:**
+  - Über 100+ vordefinierte Marker
+  - Wissenschaftlich fundiert (Gottman, Satir, Schulz von Thun)
+  - Erkennung von Manipulation, Gaslighting, emotionalen Mustern
 
-### 1. Installation
+- **Optionale KI-Integration:**
+  - Kimi K2 API für erweiterte Insights
+  - Sentiment-Analyse
+  - Risikobewertung
 
+## 🚀 Installation & Start
+
+### Voraussetzungen
+- Python 3.8+
+- 500 MB freier Speicherplatz
+
+### Quick Start
+
+1. **Repository klonen:**
+   ```bash
+   git clone https://github.com/DYAI2025/_v1_MarkerEngine_BETA_test_version_1.0.git
+   cd _v1_MarkerEngine_BETA_test_version_1.0
+   ```
+
+2. **Dependencies installieren:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **App starten:**
+   ```bash
+   python run_markerengine.py
+   ```
+
+### Pipeline testen
 ```bash
-# Repository klonen
-git clone https://github.com/DYAI2025/_v1_MarkerEngine_BETA_test_version_1.0.git
-cd _v1_MarkerEngine_BETA_test_version_1.0
-
-# Dependencies installieren
-pip install -r requirements.txt
+python test_pipeline.py
 ```
 
-### 2. KI-Features aktivieren (Optional aber empfohlen)
+## 📱 WhatsApp Chat exportieren
 
-1. Kopiere `.env.example` zu `.env`:
+### iPhone
+1. WhatsApp → Chat öffnen
+2. Kontakt antippen → "Chat exportieren"
+3. "Ohne Medien" wählen
+4. Als .txt speichern
+
+### Android
+1. WhatsApp → Chat öffnen
+2. Drei Punkte → "Mehr" → "Chat exportieren"
+3. "Ohne Medien" wählen
+
+## 🤖 KI-Features aktivieren
+
+1. Erstelle eine `.env` Datei:
    ```bash
    cp .env.example .env
    ```
 
-2. Füge deinen Kimi K2 API Key ein:
+2. Füge deinen Kimi API Key ein:
    ```
-   KIMI_API_KEY=sk-dein-api-key-hier
+   KIMI_API_KEY=sk-your-api-key-here
    ```
 
-   > 🔑 Bekomme deinen API Key auf: https://platform.moonshot.ai/
+## 🏗️ Projektstruktur
 
-### 3. App starten
+```
+_v1_MarkerEngine_BETA_test_version_1.0/
+├── Marker/                  # ECHTE Marker-Definitionen
+│   ├── atomic/             # 100+ Atomic Markers
+│   ├── semantic/           # Semantic Patterns
+│   ├── cluster/            # Cluster Dynamics
+│   └── meta_marker/        # Meta Patterns
+├── markerengine/           # Core Engine
+│   ├── core/              # Analyse-Engine
+│   ├── gui/               # PySide6 GUI
+│   └── kimi/              # KI-Integration
+└── run_markerengine.py    # Hauptstartpunkt
+```
 
-**Mac:**
+## 📊 Analyse-Ergebnisse
+
+Die Engine liefert:
+- **Statistiken**: Anzahl gefundener Marker pro Ebene
+- **Atomic Hits**: Konkrete Textstellen mit Markern
+- **Semantic Patterns**: Erkannte Bedeutungsmuster
+- **Cluster Dynamics**: Kommunikationsdynamiken
+- **Meta Patterns**: Kritische Verhaltensmuster
+- **Insights**: KI-generierte Empfehlungen
+
+## 🔧 Entwicklung
+
+### Tests ausführen
 ```bash
-chmod +x run_macos.command
-./run_macos.command
+python test_pipeline.py
 ```
 
-**Windows:**
-```
-Doppelklick auf run_windows.bat
-```
+### Neue Marker hinzufügen
+Marker sind YAML-Dateien im `/Marker/` Verzeichnis:
+- Atomic: `/Marker/atomic/MARKER_NAME.yaml`
+- Semantic: `/Marker/semantic/S_PATTERN.yaml`
+- Cluster: `/Marker/cluster/C_DYNAMIC.yaml`
+- Meta: `/Marker/meta_marker/MM_META.yaml`
 
-**Development:**
-```bash
-python run_app.py
-```
-
-## 📱 WhatsApp-Chat exportieren
-
-**iPhone:**
-1. WhatsApp → Chat öffnen
-2. Kontaktname antippen
-3. "Chat exportieren" → "Ohne Medien"
-4. Als .txt speichern
-
-**Android:**
-1. WhatsApp → Chat öffnen  
-2. ⋮ (Drei Punkte) → Mehr → Chat exportieren
-3. "Ohne Medien" wählen
-4. Als .txt speichern
-
-## 🎯 Was wird analysiert?
-
-### Regel-basierte Marker:
-- **Emotionen**: Positive/negative Stimmungen
-- **Dringlichkeit**: Zeitdruck-Indikatoren  
-- **Geld**: Finanzielle Themen
-- **Vertrauen**: Vertrauensappelle
-- **Manipulation**: Manipulative Muster
-
-### KI-Analyse (Kimi K2):
-- **Sentiment-Analyse**: Gesamtstimmung des Chats
-- **Hauptthemen**: Automatische Themenerkennung
-- **Risiko-Indikatoren**: Betrugs- und Manipulationsmuster
-- **Kommunikationsmuster**: Verhaltensanalyse
-- **Zusammenfassung**: KI-generierte Übersicht
-
-## 🔧 Konfiguration
-
-Die App funktioniert ohne Konfiguration. Für KI-Features:
-
-1. **In der App**: API Key direkt in der GUI eingeben
-2. **Oder via .env**: Datei erstellen mit `KIMI_API_KEY=...`
-
-## 📊 Ergebnisse verstehen
-
-Die App zeigt drei Tabs:
-
-1. **📋 Regel-Analyse**: Gefundene Marker und Statistiken
-2. **🤖 KI-Analyse**: Kimi K2 Insights (wenn API Key vorhanden)
-3. **💡 Insights**: Kombinierte Warnungen und Muster
-
-### Schweregrade:
-- 🔴 **Hoch**: Sofortige Aufmerksamkeit erforderlich
-- 🟡 **Mittel**: Verdächtige Muster
-- 🟢 **Niedrig**: Informative Hinweise
-
-## 🛡️ Datenschutz
-
-- Regel-Analyse: 100% lokal auf deinem Computer
-- KI-Analyse: Nur Text-Auszüge (max 2000 Zeichen) werden an Kimi K2 API gesendet
-- Keine Datenspeicherung auf Servern
-- API-Kommunikation nur wenn explizit aktiviert
-
-## 🐛 Troubleshooting
-
-**"Keine KI-Analyse verfügbar"**
-- Prüfe deinen API Key in den Einstellungen
-- Stelle sicher, dass du Internet hast
-- Überprüfe dein API-Guthaben auf platform.moonshot.ai
-
-**"Import Error"**
-- Installiere alle Dependencies: `pip install -r requirements.txt`
-- Python 3.8+ erforderlich
-
-## 📈 Geplante Features
-
-- [ ] Audio-Transkription (WhatsApp Sprachnachrichten)
-- [ ] Export als PDF-Report
-- [ ] Batch-Analyse mehrerer Chats
-- [ ] Weitere Sprachen (EN, ES, FR)
-- [ ] Custom Marker-Profile
-
-## 📄 Lizenz
+## 📝 Lizenz
 
 MIT License - siehe LICENSE
 
+## 🙏 Credits
+
+- Entwickelt mit Unterstützung von Claude (Anthropic)
+- Basierend auf Kommunikationstheorien von Gottman, Satir, Schulz von Thun
+- Frontend inspiriert von fraud-detection-with-gnn
+
 ---
 
-Entwickelt mit ❤️ und Claude | Powered by Kimi K2 🤖
+**Wichtig**: Diese Software analysiert Kommunikationsmuster zu Schutzzwecken. Die Ergebnisse sind Hinweise, keine Diagnosen.

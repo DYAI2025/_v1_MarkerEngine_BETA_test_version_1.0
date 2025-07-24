@@ -1,1 +1,1 @@
-# MarkerEngine GUI Module
+"""MarkerEngine GUI Module"""
